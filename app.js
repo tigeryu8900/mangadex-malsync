@@ -32,16 +32,16 @@ function copyHeaders(from, to) {
     });
 }
 
-async function injectMalsync(document, url) {
+async function injectMalsync(document, srcURL, dstURL) {
     for (let element of document.querySelectorAll(':not(a)[href]')) {
-        let href = new URL(element.href, url);
-        if (href.hostname !== url.hostname) {
+        let href = new URL(element.href, srcURL);
+        if (href.hostname !== srcURL.hostname) {
             element.href = `/fetch/${href}`;
         }
     }
     for (let element of document.querySelectorAll('[src]')) {
-        let src = new URL(element.src, url);
-        if (src.hostname !== url.hostname) {
+        let src = new URL(element.src, srcURL);
+        if (src.hostname !== srcURL.hostname) {
             element.src = `/fetch/${src}`;
         }
     }
@@ -50,16 +50,16 @@ async function injectMalsync(document, url) {
             await callback(${JSON.stringify(str)});
         `)
         .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false");
-    if (url.pathname.startsWith("/pwa")) {
+    if (srcURL.pathname.startsWith("/pwa")) {
         malsync = malsync.replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
             'location.pathname === "/pwa/"')
-            .replace(/malsync\.moe\/pwa/g, `${url.host.replaceAll("$", "$$$$")}/pwa`);
+            .replace(/malsync\.moe\/pwa/g, `${srcURL.host.replaceAll("$", "$$$$")}/pwa`);
     } else {
-        malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, url.host.replaceAll("$", "$$$$"));
+        malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, srcURL.host.replaceAll("$", "$$$$"));
     }
     let malsyncScript = document.createElement("script");
     malsyncScript.textContent = String.raw`
-        const __userscript_location__ = window.__userscript_location__ = new URL(${JSON.stringify(url)});
+        const __userscript_location__ = window.__userscript_location__ = new URL(${JSON.stringify(dstURL)});
         ${userscriptPolyfill}
         (async () => {
             let callback = await __polyfill_loader__;
@@ -104,7 +104,7 @@ app.all("*", async (req, res) => {
         }
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
-            await injectMalsync(dom.window.document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`));
+            await injectMalsync(dom.window.document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`), url);
             res.send(dom.serialize());
         } else if (url.href === "https://malsync.moe/pwa/manifest.json") {
             let manifest = await response.json();
