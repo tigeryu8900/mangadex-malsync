@@ -57,7 +57,11 @@ function transformURL(resource, srcURL, dstURL, anchorMode = false) {
 function transformElement(element, srcURL, dstURL) {
     try {
         if (element.href) {
-            element.href = transformURL(element.href, srcURL, dstURL, element.tagName.toLowerCase() === "a");
+            let anchorMode = element.tagName.toLowerCase() === "a";
+            element.href = transformURL(element.href, srcURL, dstURL, anchorMode);
+            if (anchorMode && new URL(element.href, srcURL).origin === srcURL.origin && element.target === "_blank") {
+                element.removeAttribute("target");
+            }
         }
         if (element.src) {
             element.src = transformURL(element.src, srcURL, dstURL);

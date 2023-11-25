@@ -45,7 +45,11 @@ let __polyfill_loader__ = (async () => {
         try {
             element.__userscript_transformed__ = true;
             if (element.href) {
-                element.href = transformURL(element.href, element.tagName.toLowerCase() === "a");
+                let anchorMode = element.tagName.toLowerCase() === "a";
+                element.href = transformURL(element.href, anchorMode);
+                if (anchorMode && new URL(element.href, location).origin === location.origin && element.target === "_blank") {
+                    element.removeAttribute("target");
+                }
             }
             if (element.src) {
                 element.src = transformURL(element.src);
