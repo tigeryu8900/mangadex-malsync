@@ -78,7 +78,22 @@ app.all("*", async (req, res) => {
         } else {
             url = new URL(req.originalUrl, "https://mangadex.org");
         }
-        let response = await fetch(url, req);
+        let response = await fetch(url, {
+            method: req.method,
+            headers: {
+                ...req.headers,
+                referer: url.origin,
+                referrer: url.origin,
+                origin: url.origin,
+            },
+            credentials: req.credentials,
+            body: req.body,
+            cache: req.cache,
+            redirect: req.redirect,
+            referrer: req.referrer,
+            referrerPolicy: req.referrerPolicy,
+            integrity: req.integrity
+        });
         copyHeaders(response, res);
         if (req.path.startsWith("/fetch")) {
             res.set("Access-Control-Allow-Origin", "*");
@@ -86,8 +101,6 @@ app.all("*", async (req, res) => {
             res.set("Access-Control-Allow-Headers", "*");
             res.set("Access-Control-Allow-Private-Network", "true");
         }
-        res.set("referer", url.origin);
-        res.set("origin", url.origin);
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
             await injectMalsync(dom.window.document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`));
