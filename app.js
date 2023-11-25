@@ -100,7 +100,7 @@ async function injectMalsync(document, srcURL, dstURL) {
 app.all("*", async (req, res) => {
     try {
         let srcURL = new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`);
-        let dstURL = /^\/pwa\/(?!icons\/)|^\/icons\/|^\/js\/|^\/css\/|^\/(?:\w+\/)?oauth\b/.test(req.path) ?
+        let dstURL = /^\/pwa\/(?!icons\/|screenshots\/|shotcuts\/)|^\/icons\/|^\/js\/|^\/css\/|^\/(?:\w+\/)?oauth\b/.test(req.path) ?
             new URL(req.originalUrl, "https://malsync.moe") :
             req.path.startsWith("/fetch/") ?
                 new URL(req.originalUrl.substring("/fetch/".length)) :
