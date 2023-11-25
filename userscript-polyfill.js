@@ -318,7 +318,7 @@ let __polyfill_loader__ = (async () => {
                         cookie: [headers.cookie ?? document.cookie, details.cookie].filter(e => e).join("; ")
                     }
                 },
-                body: details.body,
+                body: details.data,
             }).then(async response => {
                 let transformed = await transform(response);
                 if (details.onloadstart) details.onloadstart(transformed);
@@ -378,7 +378,7 @@ let __polyfill_loader__ = (async () => {
             if (details.onprogress) xhr.addEventListener("progress", () => details.onprogress(xhr));
             if (details.onreadystatechange) xhr.addEventListener("readystatechange", () => details.onreadystatechange(xhr));
             if (details.ontimeout) xhr.addEventListener("timeout", () => details.ontimeout(xhr));
-            xhr.send(details.body);
+            xhr.send(details.data);
             let promise = new Promise((resolve, reject) => {
                 xhr.addEventListener("load", () => resolve(xhr));
                 xhr.addEventListener("abort", () => reject(xhr));
