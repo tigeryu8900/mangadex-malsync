@@ -137,7 +137,7 @@ app.all("*", async (req, res) => {
                 let icon = document.createElement("link");
                 icon.rel = "icon";
                 icon.type = "image/png";
-                icon.sizes.add("128x128");
+                icon.setAttribute("sizes", "128x128")
                 icon.href = "https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png";
                 document.head.appendChild(icon);
                 let appleIcon = document.createElement("link");
