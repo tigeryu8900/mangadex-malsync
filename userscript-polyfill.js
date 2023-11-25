@@ -12,12 +12,12 @@ let __polyfill_loader__ = (async () => {
         || hostname.endsWith('.local');
     }
 
-    function transformURL(resource) {
+    function transformURL(resource, anchorMode = false) {
         let url = new URL(resource, location.href);
         if (url.origin === __userscript_location__.origin) {
             return (url.pathname || location.origin) + url.hash;
         }
-        return (url.origin === location.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
+        return (anchorMode || url.origin === location.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
     }
 
     const oldFetch = fetch;
@@ -38,9 +38,9 @@ let __polyfill_loader__ = (async () => {
 
     function transformElement(element) {
         try {
-            element.__userscript_transformed__ = true;
-            if (element.href && element.tagName.toLowerCase() !== "a") {
-                element.href = transformURL(element.href);
+            element.classList.add("--userscript-transformed--");
+            if (element.href) {
+                element.href = transformURL(element.href, element.tagName.toLowerCase() === "a");
             }
             if (element.src) {
                 element.src = transformURL(element.src);
@@ -51,27 +51,13 @@ let __polyfill_loader__ = (async () => {
     }
 
     try {
-        const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
-            for (const mutation of mutationList) {
-                if (mutation.type === "childList") {
-                    for (let element of mutation.addedNodes) {
-                        transformElement(element);
-                        for (let descendent of element.querySelectorAll(':not(a)[href], [src]')) {
-                            transformElement(descendent);
-                        }
-                    }
-                } else if (mutation.type === "attributes") {
-                    if ((mutation.attributeName === "href" && mutation.target.tagName.toLowerCase() !== "a")
-                        || mutation.attributeName === "src") {
-                        transformElement(mutation.target);
-                    }
-                }
+        const observer = new (MutationObserver || WebkitMutationObserver)(() => {
+            for (let element of document.querySelectorAll(':not(.--userscript-transformed--):is([href], [src])')) {
+                transformElement(element);
             }
         });
         const config = { attributes: true, childList: true, subtree: true };
-
-        observer.observe(document.head, config);
-        observer.observe(document.body, config);
+        observer.observe(document.documentElement ?? document.body, config);
     } catch (e) {
         console.log(e);
     }
