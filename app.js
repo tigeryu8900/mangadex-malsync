@@ -1,6 +1,6 @@
 import express from "express";
 import {JSDOM} from "jsdom";
-import fetch from 'node-fetch-cache';
+// import fetch from 'node-fetch-cache';
 
 import * as fs from "fs";
 
@@ -104,6 +104,7 @@ app.all("*", async (req, res) => {
                 new URL(req.originalUrl.substring("/fetch/".length)) :
                 new URL(req.originalUrl, "https://mangadex.org");
         let response = await fetch(dstURL, {
+            rejectUnauthorized:false,
             method: req.method,
             headers: {
                 ...req.headers,
