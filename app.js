@@ -1,5 +1,7 @@
 import express from "express";
 import {JSDOM} from "jsdom";
+import fetch from 'node-fetch-cache';
+
 import * as fs from "fs";
 
 const app = express();
