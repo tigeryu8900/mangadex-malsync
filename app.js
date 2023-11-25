@@ -37,11 +37,14 @@ async function injectMalsync(document, url) {
         .replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
             await callback(${JSON.stringify(str)});
         `)
-        .replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
+        .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false");
+    if (url.pathname.startsWith("/pwa")) {
+        malsync = malsync.replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
             'location.pathname === "/pwa/"')
-        .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false")
-        .replace(/malsync\.moe\/pwa/g, `${url.host.replaceAll("$", "$$$$")}/pwa`)
-        .replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, url.host.replaceAll("$", "$$$$"));
+            .replace(/malsync\.moe\/pwa/g, `${url.host.replaceAll("$", "$$$$")}/pwa`);
+    } else {
+        malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, url.host.replaceAll("$", "$$$$"));
+    }
     let malsyncScript = document.createElement("script");
     malsyncScript.textContent = String.raw`
         ${userscriptPolyfill}
