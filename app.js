@@ -150,20 +150,17 @@ app.all("*", async (req, res) => {
             }
             await injectMalsync(document, srcURL, dstURL);
             res.send(dom.serialize());
-        } else if (dstURL.href === "https://malsync.moe/pwa/manifest.json") {
-            let manifest = await response.json();
-            for (let icon of manifest.icons) {
-                icon.src = new URL(icon.src, dstURL).href;
-            }
-            res.send(JSON.stringify(manifest));
-        } else if (dstURL.href === "https://mangadex.org/manifest.webmanifest") {
+        } else if ([
+            "https://mangadex.org/manifest.webmanifest",
+            "https://malsync.moe/pwa/manifest.json"
+        ].includes(dstURL.href)) {
             let manifest = await response.json();
             manifest.start_url = transformURL(manifest.start_url, srcURL, dstURL);
             (function changeSrcs(object) {
                 for (let [key, value] of Object.entries(object)) {
                     if (value instanceof Object) {
                         changeSrcs(value);
-                    } else if (key === "src") {
+                    } else if (typeof value == "string" && ["src", "url", "start_url"].includes(key)) {
                         object[key] = transformURL(value, srcURL, dstURL);
                     }
                 }
