@@ -41,7 +41,7 @@ let __polyfill_loader__ = (async () => {
 
     function transformElement(element) {
         try {
-            element.classList.add("--userscript-transformed--");
+            element.__userscript_transformed__ = true;
             if (element.href) {
                 element.href = transformURL(element.href, element.tagName.toLowerCase() === "a");
             }
@@ -54,9 +54,24 @@ let __polyfill_loader__ = (async () => {
     }
 
     try {
-        const observer = new (MutationObserver || WebkitMutationObserver)(() => {
-            for (let element of document.querySelectorAll(':not(.--userscript-transformed--):is([href], [src])')) {
-                transformElement(element);
+        const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
+            for (const mutation of mutationList) {
+                if (mutation.type === "childList") {
+                    for (let element of mutation.addedNodes) {
+                        if (!element.__userscript_transformed__) {
+                            transformElement(element);
+                            for (let descendent of element.querySelectorAll('[href], [src]')) {
+                                transformElement(descendent);
+                            }
+                        }
+                    }
+                } else if (mutation.type === "attributes") {
+                    if (mutation.attributeName === "href" || mutation.attributeName === "src") {
+                        if (!mutation.target.__userscript_transformed__) {
+                            transformElement(mutation.target);
+                        }
+                    }
+                }
             }
         });
         const config = { attributes: true, childList: true, subtree: true };

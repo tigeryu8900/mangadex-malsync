@@ -52,7 +52,6 @@ function transformURL(resource, srcURL, dstURL, anchorMode = false) {
 
 function transformElement(element, srcURL, dstURL) {
     try {
-        element.classList.add("--userscript-transformed--");
         if (element.href) {
             element.href = transformURL(element.href, srcURL, dstURL, element.tagName.toLowerCase() === "a");
         }
@@ -65,7 +64,7 @@ function transformElement(element, srcURL, dstURL) {
 }
 
 async function injectMalsync(document, srcURL, dstURL) {
-    for (let element of document.querySelectorAll(':not(.--userscript-transformed--):is([href], [src])')) {
+    for (let element of document.querySelectorAll('[href], [src]')) {
         transformElement(element, srcURL, dstURL);
     }
     let malsync = (await (await fetch("https://github.com/MALSync/MALSync/releases/latest/download/malsync.user.js")).text())
