@@ -59,19 +59,11 @@ let __polyfill_loader__ = (async () => {
         const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
-                    if (document.body.querySelectorAll) {
-                        for (let element of mutation.addedNodes) {
-                            if (!element.__userscript_transformed__) {
-                                transformElement(element);
-                                for (let descendent of element.querySelectorAll('[href], [src]')) {
-                                    transformElement(descendent);
-                                }
-                            }
-                        }
-                    } else {
-                        for (let element of document.querySelectorAll('[href], [src]')) {
-                            if (!element.__userscript_transformed__) {
-                                transformElement(element);
+                    for (let element of mutation.addedNodes) {
+                        if (!element.__userscript_transformed__) {
+                            transformElement(element);
+                            for (let descendent of $(element).find('[href], [src]')) {
+                                transformElement(descendent);
                             }
                         }
                     }
