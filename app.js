@@ -152,7 +152,7 @@ app.all("*", async (req, res) => {
                 icon.src = new URL(icon.src, url).href;
             }
             res.send(JSON.stringify(manifest));
-        } else if (url.href === "https://mangadex-malsync.onrender.com/manifest.webmanifest") {
+        } else if (url.href === "https://mangadex.org/manifest.webmanifest") {
             let manifest = await response.json();
             manifest.start_url = "/";
             (function changeSrcs(object) {
