@@ -97,7 +97,7 @@ let __polyfill_loader__ = (async () => {
                         }
                     }
                     if (insertPWALink2) {
-                        let grid = $('div.drawer > div:has(button[aria-label="Close profile menu"]) > div.grid');
+                        let grid = $('div:is(.drawer, .profile__container) > div > div.grid');
                         if (grid.length) {
                             insertPWALink2 = false;
                             grid.after(String.raw`
