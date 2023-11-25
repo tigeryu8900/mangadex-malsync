@@ -155,6 +155,15 @@ app.all("*", async (req, res) => {
         } else if (url.href === "https://mangadex-malsync.onrender.com/manifest.webmanifest") {
             let manifest = await response.json();
             manifest.start_url = "/";
+            (function changeSrcs(object) {
+                for (let [key, value] of Object.entries(object)) {
+                    if (value instanceof Object) {
+                        changeSrcs(value);
+                    } else if (key === "src") {
+                        object[key] = new URL(`/fetch/${new URL(value, url)}`);
+                    }
+                }
+            })(manifest);
             res.send(JSON.stringify(manifest));
         } else {
             res.send(Buffer.from(await response.arrayBuffer()));
