@@ -18,7 +18,6 @@ let __polyfill_loader__ = (async () => {
             let urlStr = (url.pathname || location.origin) + url.hash;
             return (url.pathname.startsWith("/pwa") && !__userscript_location__.pathname.startsWith("/pwa")) ?
                 `/fetch/${new URL(urlStr, __userscript_location__)}` : urlStr;
-
         }
         return (anchorMode || url.origin === location.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
     }
