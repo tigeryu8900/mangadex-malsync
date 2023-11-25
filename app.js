@@ -86,6 +86,8 @@ app.all("*", async (req, res) => {
             res.set("Access-Control-Allow-Headers", "*");
             res.set("Access-Control-Allow-Private-Network", "true");
         }
+        res.set("referer", url.origin);
+        res.set("origin", url.origin);
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
             await injectMalsync(dom.window.document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`));
