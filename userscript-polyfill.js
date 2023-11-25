@@ -13,13 +13,16 @@ let __polyfill_loader__ = (async () => {
     }
 
     function transformURL(resource, anchorMode = false) {
-        let url = new URL(resource, location);
-        if (url.origin === __userscript_location__.origin) {
-            let urlStr = (url.pathname || location.origin) + url.hash;
-            return (url.pathname.startsWith("/pwa") && !__userscript_location__.pathname.startsWith("/pwa")) ?
-                `/fetch/${new URL(urlStr, __userscript_location__)}` : urlStr;
+        let url1 = new URL(resource, location);
+        let url2 = new URL(resource, __userscript_location__);
+        if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.hash;
+        if (url2.origin === __userscript_location__.origin) {
+            if (url2.pathname.startsWith("/pwa/") !== __userscript_location__.pathname.startsWith("/pwa/")) {
+                return anchorMode ? url2.href : `/fetch/${url2}`;
+            }
+            return (url1.pathname || location.origin) + url1.hash;
         }
-        return (anchorMode || url.origin === location.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
+        return (anchorMode || url1.origin === location.origin || isLocalNetwork(url2.hostname)) ? url2.href : `/fetch/${url2}`;
     }
 
     const oldFetch = fetch;

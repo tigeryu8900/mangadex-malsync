@@ -40,13 +40,16 @@ function isLocalNetwork(hostname) {
 }
 
 function transformURL(resource, srcURL, dstURL, anchorMode = false) {
-    let url = new URL(resource, srcURL);
-    if (url.origin === dstURL.origin) {
-        let urlStr = (url.pathname || srcURL.origin) + url.hash;
-        return (url.pathname.startsWith("/pwa") && !dstURL.pathname.startsWith("/pwa")) ?
-            `/fetch/${new URL(urlStr, dstURL)}` : urlStr;
+    let url1 = new URL(resource, srcURL);
+    let url2 = new URL(resource, dstURL);
+    if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.hash;
+    if (url2.origin === dstURL.origin) {
+        if (url2.pathname.startsWith("/pwa/") !== dstURL.pathname.startsWith("/pwa/")) {
+            return anchorMode ? url2.href : `/fetch/${url2}`;
+        }
+        return (url1.pathname || srcURL.origin) + url1.hash;
     }
-    return (anchorMode || url.origin === srcURL.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
+    return (anchorMode || url1.origin === srcURL.origin || isLocalNetwork(url2.hostname)) ? url2.href : `/fetch/${url2}`;
 }
 
 function transformElement(element, srcURL, dstURL) {
@@ -93,9 +96,9 @@ async function injectMalsync(document, srcURL, dstURL) {
 app.all("*", async (req, res) => {
     try {
         let srcURL = new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`);
-        let dstURL = req.path.startsWith("/pwa") ?
+        let dstURL = req.path.startsWith("/pwa/") ?
             new URL(req.originalUrl, "https://malsync.moe") :
-            req.path.startsWith("/fetch") ?
+            req.path.startsWith("/fetch/") ?
                 new URL(req.originalUrl.substring("/fetch/".length)) :
                 new URL(req.originalUrl, "https://mangadex.org");
         let response = await fetch(dstURL, {
@@ -124,7 +127,7 @@ app.all("*", async (req, res) => {
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
             let document = dom.window.document;
-            if (req.path.startsWith("/pwa")) {
+            if (req.path.startsWith("/pwa/")) {
                 // <meta name="apple-mobile-web-app-capable" content="yes">
                 // <link rel="icon" type="image/png" sizes="128x128" href="https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png">
                 // <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png">
