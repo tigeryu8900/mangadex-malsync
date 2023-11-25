@@ -15,12 +15,12 @@ let __polyfill_loader__ = (async () => {
     function transformURL(resource, anchorMode = false) {
         let url1 = new URL(resource, location);
         let url2 = new URL(resource, __userscript_location__);
-        if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.hash;
+        if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
         if (url2.origin === __userscript_location__.origin) {
-            if (url2.pathname.startsWith("/pwa/") !== __userscript_location__.pathname.startsWith("/pwa/")) {
-                return anchorMode ? url2.href : `/fetch/${url2}`;
-            }
-            return (url1.pathname || location.origin) + url1.hash;
+            // if (url2.pathname.startsWith("/pwa/") !== __userscript_location__.pathname.startsWith("/pwa/")) {
+            //     return anchorMode ? url2.href : `/fetch/${url2}`;
+            // }
+            return (url1.pathname || location.origin) + url1.search + url1.hash;
         }
         return (anchorMode || url1.origin === location.origin || isLocalNetwork(url2.hostname)) ? url2.href : `/fetch/${url2}`;
     }
