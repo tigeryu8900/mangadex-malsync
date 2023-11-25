@@ -75,14 +75,15 @@ async function injectMalsync(document, srcURL, dstURL) {
         .replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
             await callback(${JSON.stringify(str)});
         `)
-        .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false");
-    if (srcURL.pathname.startsWith("/pwa")) {
-        malsync = malsync.replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
-            'location.pathname === "/pwa/"')
-            .replace(/malsync\.moe\/pwa/g, `${srcURL.host.replaceAll("$", "$$$$")}/pwa`);
-    } else {
-        malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, srcURL.host.replaceAll("$", "$$$$"));
-    }
+        .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false")
+        .replace(/(?<!")\blocation\b(?!")/g, "__userscript_location__");
+        // if (srcURL.pathname.startsWith("/pwa")) {
+    //     malsync = malsync.replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
+    //         'location.pathname === "/pwa/"')
+    //         .replace(/malsync\.moe\/pwa/g, `${srcURL.host.replaceAll("$", "$$$$")}/pwa`);
+    // } else {
+    //     malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, srcURL.host.replaceAll("$", "$$$$"));
+    // }
     let malsyncScript = document.createElement("script");
     malsyncScript.textContent = String.raw`
         const __userscript_location__ = window.__userscript_location__ = new URL(${JSON.stringify(dstURL)});
