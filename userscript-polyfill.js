@@ -14,6 +14,9 @@ let __polyfill_loader__ = (async () => {
 
     function transformURL(resource, anchorMode = false) {
         let url = new URL(resource, location.href);
+        if (url.pathname.startsWith("/pwa") && !__userscript_location__.pathname.startsWith("/pwa")) {
+            return `/fetch/${url}`;
+        }
         if (url.origin === __userscript_location__.origin) {
             return (url.pathname || location.origin) + url.hash;
         }

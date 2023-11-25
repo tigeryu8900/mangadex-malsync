@@ -1,16 +1,16 @@
 import express from "express";
-import { JSDOM } from "jsdom";
+import {JSDOM} from "jsdom";
 import * as fs from "fs";
 
 const app = express();
-app.use (function(req, res, next) {
-    let data= "";
+app.use(function (req, res, next) {
+    let data = "";
     req.setEncoding("utf8");
-    req.on("data", function(chunk) {
+    req.on("data", function (chunk) {
         data += chunk;
     });
 
-    req.on("end", function() {
+    req.on("end", function () {
         req.body = data ? data : null;
         next();
     });
@@ -41,6 +41,9 @@ function isLocalNetwork(hostname) {
 
 function transformURL(resource, srcURL, dstURL, anchorMode = false) {
     let url = new URL(resource, srcURL);
+    if (url.pathname.startsWith("/pwa") && !dstURL.pathname.startsWith("/pwa")) {
+        return `/fetch/${url}`;
+    }
     if (url.origin === dstURL.origin) {
         return (url.pathname || srcURL.origin) + url.hash;
     }
@@ -91,21 +94,19 @@ async function injectMalsync(document, srcURL, dstURL) {
 
 app.all("*", async (req, res) => {
     try {
-        let url;
-        if (req.path.startsWith("/pwa")) {
-            url = new URL(req.originalUrl, "https://malsync.moe");
-        } else if (req.path.startsWith("/fetch")) {
-            url = new URL(req.originalUrl.substring("/fetch/".length));
-        } else {
-            url = new URL(req.originalUrl, "https://mangadex.org");
-        }
-        let response = await fetch(url, {
+        let srcURL = new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`);
+        let dstURL = req.path.startsWith("/pwa") ?
+            new URL(req.originalUrl, "https://malsync.moe") :
+            req.path.startsWith("/fetch") ?
+                new URL(req.originalUrl.substring("/fetch/".length)) :
+                new URL(req.originalUrl, "https://mangadex.org");
+        let response = await fetch(dstURL, {
             method: req.method,
             headers: {
                 ...req.headers,
-                referer: url.origin,
-                referrer: url.origin,
-                origin: url.origin,
+                referer: dstURL.origin,
+                referrer: dstURL.origin,
+                origin: dstURL.origin,
             },
             credentials: req.credentials,
             body: req.body,
@@ -144,23 +145,23 @@ app.all("*", async (req, res) => {
                 appleIcon.href = "https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png";
                 document.head.appendChild(appleIcon);
             }
-            await injectMalsync(document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`), url);
+            await injectMalsync(document, srcURL, dstURL);
             res.send(dom.serialize());
-        } else if (url.href === "https://malsync.moe/pwa/manifest.json") {
+        } else if (dstURL.href === "https://malsync.moe/pwa/manifest.json") {
             let manifest = await response.json();
             for (let icon of manifest.icons) {
-                icon.src = new URL(icon.src, url).href;
+                icon.src = new URL(icon.src, dstURL).href;
             }
             res.send(JSON.stringify(manifest));
-        } else if (url.href === "https://mangadex.org/manifest.webmanifest") {
+        } else if (dstURL.href === "https://mangadex.org/manifest.webmanifest") {
             let manifest = await response.json();
-            manifest.start_url = "/";
+            manifest.start_url = transformURL(manifest.start_url, srcURL, dstURL);
             (function changeSrcs(object) {
                 for (let [key, value] of Object.entries(object)) {
                     if (value instanceof Object) {
                         changeSrcs(value);
                     } else if (key === "src") {
-                        object[key] = `/fetch/${new URL(value, url)}`;
+                        object[key] = transformURL(value, srcURL, dstURL);
                     }
                 }
             })(manifest);
