@@ -33,6 +33,18 @@ function copyHeaders(from, to) {
 }
 
 async function injectMalsync(document, url) {
+    for (let element of document.querySelectorAll(':not(a)[href]')) {
+        let href = new URL(element.href, url);
+        if (href.hostname !== url.hostname) {
+            element.href = `/fetch/${href}`;
+        }
+    }
+    for (let element of document.querySelectorAll('[src]')) {
+        let src = new URL(element.src, url);
+        if (src.hostname !== url.hostname) {
+            element.src = `/fetch/${src}`;
+        }
+    }
     let malsync = (await (await fetch("https://github.com/MALSync/MALSync/releases/latest/download/malsync.user.js")).text())
         .replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
             await callback(${JSON.stringify(str)});
