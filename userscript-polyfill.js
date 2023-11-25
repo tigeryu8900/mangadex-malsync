@@ -14,8 +14,18 @@ let __polyfill_loader__ = (async () => {
 
     function transformURL(resource) {
         let url = new URL(resource, location.href);
-        return isLocalNetwork(url.hostname) ? resource : `/fetch/${url}`;
+        return (url.hostname === location.hostname || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
     }
+
+    const oldFetch = fetch;
+    fetch = window.fetch = function (resource, options) {
+        return oldFetch.call(this, transformURL(resource));
+    }
+
+    const oldOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
+        return oldOpen.call(this, method, transformURL(url), async, user, password);
+    };
 
     function generateUUID() {
         return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
@@ -246,7 +256,7 @@ let __polyfill_loader__ = (async () => {
                 Object.entries(details.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value])
             );
             let fulfilled = false;
-            let promise = fetch(transformURL(details.url), {
+            let promise = fetch(details.url, {
                 method: details.method,
                 signal: controller.signal,
                 headers: {
@@ -291,7 +301,7 @@ let __polyfill_loader__ = (async () => {
             return promise;
         } else {
             let xhr = new XMLHttpRequest();
-            xhr.open(details.method ?? "GET", transformURL(details.url));
+            xhr.open(details.method ?? "GET", details.url);
             if (details.timeout) xhr.timeout = details.timeout;
             if (details.responseType) xhr.responseType = details.responseType;
             let headers = Object.fromEntries(
