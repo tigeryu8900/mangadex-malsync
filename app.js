@@ -86,7 +86,7 @@ async function injectMalsync(document, srcURL, dstURL) {
     // }
     let malsyncScript = document.createElement("script");
     malsyncScript.textContent = String.raw`
-        const __userscript_location__ = window.__userscript_location__ = new URL(${JSON.stringify(dstURL)});
+        const __userscript_location__ = window.__userscript_location__ = document.__userscript_location__ = new URL(${JSON.stringify(dstURL)});
         ${await (await fetch("https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js")).text()}
         ${userscriptPolyfill}
         (async () => {
