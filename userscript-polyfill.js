@@ -16,7 +16,7 @@ let __polyfill_loader__ = (async () => {
         let url1 = new URL(resource, location);
         let url2 = new URL(resource, __userscript_location__);
         if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
-        if (url2.origin === __userscript_location__.origin) {
+        if (["https://malsync.moe", "https://mangadex.org"].includes(url2.origin)) {
             // if (url2.pathname.startsWith("/pwa/") !== __userscript_location__.pathname.startsWith("/pwa/")) {
             //     return anchorMode ? url2.href : `/fetch/${url2}`;
             // }

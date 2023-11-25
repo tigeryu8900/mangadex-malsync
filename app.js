@@ -45,7 +45,7 @@ function transformURL(resource, srcURL, dstURL, anchorMode = false) {
     let url1 = new URL(resource, srcURL);
     let url2 = new URL(resource, dstURL);
     if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
-    if (url2.origin === dstURL.origin) {
+    if (["https://malsync.moe", "https://mangadex.org"].includes(url2.origin)) {
         // if (url2.pathname.startsWith("/pwa/") !== dstURL.pathname.startsWith("/pwa/")) {
         //     return anchorMode ? url2.href : `/fetch/${url2}`;
         // }
