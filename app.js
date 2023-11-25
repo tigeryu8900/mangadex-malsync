@@ -41,11 +41,10 @@ function isLocalNetwork(hostname) {
 
 function transformURL(resource, srcURL, dstURL, anchorMode = false) {
     let url = new URL(resource, srcURL);
-    if (url.pathname.startsWith("/pwa") && !dstURL.pathname.startsWith("/pwa")) {
-        return `/fetch/${url}`;
-    }
     if (url.origin === dstURL.origin) {
-        return (url.pathname || srcURL.origin) + url.hash;
+        let urlStr = (url.pathname || srcURL.origin) + url.hash;
+        return (url.pathname.startsWith("/pwa") && !dstURL.pathname.startsWith("/pwa")) ?
+            `/fetch/${new URL(urlStr, dstURL)}` : urlStr;
     }
     return (anchorMode || url.origin === srcURL.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
 }
