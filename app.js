@@ -124,7 +124,27 @@ app.all("*", async (req, res) => {
         }
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
-            await injectMalsync(dom.window.document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`), url);
+            let document = dom.window.document;
+            if (req.path.startsWith("/pwa")) {
+                // <meta name="apple-mobile-web-app-capable" content="yes">
+                // <link rel="icon" type="image/png" sizes="128x128" href="https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png">
+                // <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png">
+                let mobileCapable = document.createElement("meta");
+                mobileCapable.name = "apple-mobile-web-app-capable";
+                mobileCapable.content = "yes";
+                document.head.appendChild(mobileCapable);
+                let icon = document.createElement("link");
+                icon.rel = "icon";
+                icon.type = "image/png";
+                icon.sizes.add("128x128");
+                icon.href = "https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png";
+                document.head.appendChild(icon);
+                let appleIcon = document.createElement("link");
+                appleIcon.rel = "apple-touch-icon";
+                appleIcon.href = "https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png";
+                document.head.appendChild(appleIcon);
+            }
+            await injectMalsync(document, new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`), url);
             res.send(dom.serialize());
         } else if (url.href === "https://malsync.moe/pwa/manifest.json") {
             let manifest = await response.json();
