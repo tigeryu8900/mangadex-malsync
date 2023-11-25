@@ -160,7 +160,7 @@ app.all("*", async (req, res) => {
                     if (value instanceof Object) {
                         changeSrcs(value);
                     } else if (key === "src") {
-                        object[key] = new URL(`/fetch/${new URL(value, url)}`);
+                        object[key] = `/fetch/${new URL(value, url)}`;
                     }
                 }
             })(manifest);
