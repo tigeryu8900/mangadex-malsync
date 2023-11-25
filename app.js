@@ -136,8 +136,8 @@ app.all("*", async (req, res) => {
         if (response.headers.get("content-type")?.includes("text/html")) {
             let dom = new JSDOM(await response.text());
             let document = dom.window.document;
-            let manifest = document.querySelector('meta[rel="manifest"]');
-            if (manifest) manifest.href = "/pwa/manifest.json";
+            // let manifest = document.querySelector('meta[rel="manifest"]');
+            // if (manifest) manifest.href = "/pwa/manifest.json";
             if (req.path.startsWith("/pwa/")) {
                 // <meta name="apple-mobile-web-app-capable" content="yes">
                 // <link rel="icon" type="image/png" sizes="128x128" href="https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png">
