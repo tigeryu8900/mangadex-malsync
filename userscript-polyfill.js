@@ -60,16 +60,14 @@ let __polyfill_loader__ = (async () => {
     }
 
     try {
-        let insertPWALink1 = __userscript_location__.origin === "https://mangadex.org";
-        let insertPWALink2 = insertPWALink1;
-        let insertPWALink3 = insertPWALink1;
+        let insertPWALink = __userscript_location__.origin === "https://mangadex.org";
         const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
-                    if (insertPWALink1) {
-                        let home = $('#section-Home');
+                    if (insertPWALink) {
+                        let home = $('#section-Home:not([__userscript_transformed__])');
                         if (home.length) {
-                            insertPWALink1 = false;
+                            home.attr("__userscript_transformed__", "");
                             home.after(String.raw`
                                 <a data-v-69037ae7="" data-v-eba09a86="" href="/pwa/" class="flex-shrink-0" title="">
                                     <div data-v-eba09a86="" class="px-4 pt-2 flex flex-col flex-shrink-0">
@@ -96,44 +94,9 @@ let __polyfill_loader__ = (async () => {
                                 </a>
                             `);
                         }
-                    }
-                    if (insertPWALink2) {
-                        let grid = $('div.drawer > div > div.grid');
+                        let grid = $('div:is(.drawer, .profile__container) > div > div.grid:not([__userscript_transformed__])');
                         if (grid.length) {
-                            insertPWALink2 = false;
-                            grid.after(String.raw`
-                                <a data-v-a31e942f=""
-                                   data-v-c1dca64c=""
-                                   class="list__item mt-1 rounded custom-opacity relative md-btn flex items-center px-3 overflow-hidden accent text px-4 list__item mt-1"
-                                   style="min-height: 3rem; min-width: 100%;"
-                                   href="/pwa/">
-                                    <span data-v-a31e942f=""
-                                          class="flex relative items-center justify-center font-medium select-none w-full"
-                                          style="pointer-events: none; justify-content: stretch;">
-                                        <div data-v-c1dca64c="" class="flex justify-between items-center w-full">
-                                            <span data-v-c1dca64c="" class="mr-1 whitespace-nowrap">MALSync</span>
-                                            <object data-v-4c681a64=""
-                                                    data-v-abcd45c8=""
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="24" height="24" fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round" 
-                                                    stroke-width="2"
-                                                    class="feather feather-book-open icon"
-                                                    viewbox="0 0 24 24"
-                                                    style="color: currentcolor;"
-                                                    data="/icons/mal-sync-icon.svg"></object>
-                                        </div>
-                                    </span>
-                                </a>
-                            `);
-                        }
-                    }
-                    if (insertPWALink3) {
-                        let grid = $('div.profile__container > div > div.grid');
-                        if (grid.length) {
-                            insertPWALink3 = false;
+                            grid.attr("__userscript_transformed__", "");
                             grid.after(String.raw`
                                 <a data-v-a31e942f=""
                                    data-v-c1dca64c=""
