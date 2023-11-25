@@ -14,7 +14,10 @@ let __polyfill_loader__ = (async () => {
 
     function transformURL(resource) {
         let url = new URL(resource, location.href);
-        return (url.hostname === location.hostname || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
+        if (url.origin === __userscript_location__.origin) {
+            return (url.pathname || location.origin) + url.hash;
+        }
+        return (url.origin === location.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
     }
 
     const oldFetch = fetch;

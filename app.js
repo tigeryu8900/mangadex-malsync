@@ -59,6 +59,7 @@ async function injectMalsync(document, url) {
     }
     let malsyncScript = document.createElement("script");
     malsyncScript.textContent = String.raw`
+        const __userscript_location__ = window.__userscript_location__ = new URL(${JSON.stringify(url)});
         ${userscriptPolyfill}
         (async () => {
             let callback = await __polyfill_loader__;
