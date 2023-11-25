@@ -33,19 +33,24 @@ let __polyfill_loader__ = (async () => {
         );
     }
 
+    function transformElement(element) {
+        element.__userscript_transformed__ = true;
+        if (element.href && element.tagName.toLowerCase() !== "a") {
+            element.href = transformURL(element.href);
+        }
+        if (element.src) {
+            element.src = transformURL(element.src);
+        }
+    }
+
     try {
         const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
                     for (let element of mutation.addedNodes) {
-                        if (!element.__userscript_transformed__) {
-                            element.__userscript_transformed__ = true;
-                            if (element.href && element.tagName.toLowerCase() !== "a") {
-                                element.href = transformURL(element.href);
-                            }
-                            if (element.src) {
-                                element.src = transformURL(element.src);
-                            }
+                        transformElement(element);
+                        for (let descendent of element.querySelectorAll(':not(a)[href], [src]')) {
+                            transformElement(descendent);
                         }
                     }
                 } else if (mutation.type === "attributes") {
