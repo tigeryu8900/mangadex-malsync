@@ -37,12 +37,16 @@ let __polyfill_loader__ = (async () => {
     }
 
     function transformElement(element) {
-        element.__userscript_transformed__ = true;
-        if (element.href && element.tagName.toLowerCase() !== "a") {
-            element.href = transformURL(element.href);
-        }
-        if (element.src) {
-            element.src = transformURL(element.src);
+        try {
+            element.__userscript_transformed__ = true;
+            if (element.href && element.tagName.toLowerCase() !== "a") {
+                element.href = transformURL(element.href);
+            }
+            if (element.src) {
+                element.src = transformURL(element.src);
+            }
+        } catch (e) {
+            console.error(e);
         }
     }
 
@@ -59,10 +63,7 @@ let __polyfill_loader__ = (async () => {
                 } else if (mutation.type === "attributes") {
                     if ((mutation.attributeName === "href" && mutation.target.tagName.toLowerCase() !== "a")
                         || mutation.attributeName === "src") {
-                        if (!mutation.target.__userscript_transformed__) {
-                            mutation.target.__userscript_transformed__ = true;
-                            mutation.target[mutation.attributeName] = transformURL(mutation.target[mutation.attributeName]);
-                        }
+                        transformElement(mutation.target);
                     }
                 }
             }
