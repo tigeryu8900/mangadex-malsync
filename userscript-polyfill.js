@@ -19,7 +19,7 @@ let __polyfill_loader__ = (async () => {
 
     const oldFetch = fetch;
     fetch = window.fetch = function (resource, options) {
-        return oldFetch.call(this, transformURL(resource));
+        return oldFetch.call(this, transformURL(resource), options);
     }
 
     const oldOpen = XMLHttpRequest.prototype.open;
@@ -31,6 +31,34 @@ let __polyfill_loader__ = (async () => {
         return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
             (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
         );
+    }
+
+    try {
+        const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
+            for (const mutation of mutationList) {
+                if (mutation.type === "childList") {
+                    for (let element of mutation.addedNodes) {
+                        if (element.href && element.tagName.toLowerCase() !== "a") {
+                            element.href = transformURL(element.href);
+                        }
+                        if (element.src) {
+                            element.src = transformURL(element.src);
+                        }
+                    }
+                } else if (mutation.type === "attributes") {
+                    if ((mutation.attributeName === "href" && mutation.target.tagName.toLowerCase() !== "a")
+                        || mutation.attributeName === "src") {
+                        mutation.target[mutation.attributeName] = transformURL(mutation.target[mutation.attributeName]);
+                    }
+                }
+            }
+        });
+        const config = { attributes: true, childList: true, subtree: true };
+
+        observer.observe(document.head, config);
+        observer.observe(document.body, config);
+    } catch (e) {
+        console.log(e);
     }
 
     function blobToBase64(blob) {
@@ -75,10 +103,8 @@ let __polyfill_loader__ = (async () => {
     }
 
     async function download(a, b) {
-        download(a, b);
+        GM_download(a, b);
     }
-
-    const resources = {};
 
     function GM_getResourceText(name) {
         return JSON.parse(localStorage.getItem(resourcePrefix + name) ?? "{}")?.text;
@@ -101,11 +127,11 @@ let __polyfill_loader__ = (async () => {
     async function notification() {}
 
     function GM_openInTab(url, options) {
-        open(url);
+        open(url, options);
     }
 
     async function openInTab(url, options) {
-        open(url);
+        open(url, options);
     }
 
     function GM_registerMenuCommand(name, callback, options_or_accessKey) {}
@@ -426,7 +452,7 @@ let __polyfill_loader__ = (async () => {
                     version: null
                 }
             };
-            await Promise.all([...scriptMetaStr.matchAll(/@([^\s:]+)(?::(\S+))?(?:[^\S\n]+(.+?))?\s*?\n/g)].map(async ([match, name, locale, value]) => {
+            await Promise.all([...scriptMetaStr.matchAll(/@([^\s:]+)(?::(\S+))?(?:[^\S\n]+(.+?))?\s*?\n/g)].map(async ([, name, locale, value]) => {
                 switch (name) {
                     case "antifeature": {
                         let [k, v] = value.split(/(?<=^\S*)\s+/);
