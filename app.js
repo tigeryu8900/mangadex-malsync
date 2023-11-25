@@ -32,18 +32,38 @@ function copyHeaders(from, to) {
     });
 }
 
-async function injectMalsync(document, srcURL, dstURL) {
-    for (let element of document.querySelectorAll(':not(a)[href]')) {
-        let href = new URL(element.href, srcURL);
-        if (href.hostname !== srcURL.hostname) {
-            element.href = `/fetch/${href}`;
-        }
+function isLocalNetwork(hostname) {
+    return ['localhost', '127.0.0.1', '', '::1'].includes(hostname)
+        || hostname.startsWith('192.168.')
+        || hostname.startsWith('10.')
+        || hostname.endsWith('.local');
+}
+
+function transformURL(resource, srcURL, dstURL, anchorMode = false) {
+    let url = new URL(resource, srcURL);
+    if (url.origin === dstURL.origin) {
+        return (url.pathname || srcURL.origin) + url.hash;
     }
-    for (let element of document.querySelectorAll('[src]')) {
-        let src = new URL(element.src, srcURL);
-        if (src.hostname !== srcURL.hostname) {
-            element.src = `/fetch/${src}`;
+    return (anchorMode || url.origin === srcURL.origin || isLocalNetwork(url.hostname)) ? resource : `/fetch/${url}`;
+}
+
+function transformElement(element, srcURL, dstURL) {
+    try {
+        element.classList.add("--userscript-transformed--");
+        if (element.href) {
+            element.href = transformURL(element.href, srcURL, dstURL, element.tagName.toLowerCase() === "a");
         }
+        if (element.src) {
+            element.src = transformURL(element.src, srcURL, dstURL);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function injectMalsync(document, srcURL, dstURL) {
+    for (let element of document.querySelectorAll(':not(.--userscript-transformed--):is([href], [src])')) {
+        transformElement(element, srcURL, dstURL);
     }
     let malsync = (await (await fetch("https://github.com/MALSync/MALSync/releases/latest/download/malsync.user.js")).text())
         .replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
