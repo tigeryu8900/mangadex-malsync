@@ -12,7 +12,7 @@
     "node": ">=21.0.0"
   },
   "scripts": {
-    "build": "node get-malsync-userscript.js",
+    "get-malsync-userscript": "node get-malsync-userscript.js",
     "start": "node app.js"
   },
   "keywords": [],
