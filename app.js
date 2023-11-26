@@ -1,8 +1,11 @@
 import express from "express";
 import {JSDOM} from "jsdom";
-// import fetch from 'node-fetch-cache';
+import { withCache } from "ultrafetch";
 
 import * as fs from "fs";
+
+
+fetch = withCache(fetch);
 
 const app = express();
 app.use(function (req, res, next) {
