@@ -1,6 +1,6 @@
 import express from "express";
 import {JSDOM} from "jsdom";
-import { withCache } from "ultrafetch";
+import {withCache} from "ultrafetch";
 
 import * as fs from "fs";
 
@@ -22,6 +22,8 @@ app.use(function (req, res, next) {
 });
 
 const userscriptPolyfill = fs.readFileSync("./userscript-polyfill.js").toString();
+const malsync = fs.readFileSync("./malsync.recast.user.js").toString();
+const jquery = await (await fetch("https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js")).text();
 
 function copyHeaders(from, to) {
     from.headers.forEach((value, key) => {
@@ -78,31 +80,24 @@ async function injectMalsync(document, srcURL, dstURL) {
     for (let element of document.querySelectorAll('[href], [src]')) {
         transformElement(element, srcURL, dstURL);
     }
-    let malsync = (await (await fetch("https://github.com/MALSync/MALSync/releases/latest/download/malsync.user.js")).text())
-        .replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
-            await callback(${JSON.stringify(str)});
-        `)
-        .replace(/!firstData\.hasOwnProperty\("\w+"\)/g, "false")
-        .replace(/(?<!")\blocation\b(?!")/g, "__userscript_location__");
-        // if (srcURL.pathname.startsWith("/pwa")) {
-    //     malsync = malsync.replace(/\b(?:window\.)?location\.hostname\s*===?\s*(['"`])malsync\.moe\1|(['"`])malsync\.moe\2\s*===?\s*(?:window\.)?location\.hostname\b/g,
-    //         'location.pathname === "/pwa/"')
-    //         .replace(/malsync\.moe\/pwa/g, `${srcURL.host.replaceAll("$", "$$$$")}/pwa`);
-    // } else {
-    //     malsync = malsync.replace(/(?<!\.)\b(?:www\.)?mangadex\.org\b/g, srcURL.host.replaceAll("$", "$$$$"));
-    // }
     let malsyncScript = document.createElement("script");
-    malsyncScript.textContent = String.raw`
-        const __userscript_location__ = window.__userscript_location__ = document.__userscript_location__ = new URL(${JSON.stringify(dstURL)});
-        ${await (await fetch("https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js")).text()}
+    malsyncScript.src = `/malsync.user.js?${new URLSearchParams({
+        url: dstURL
+    })}`;
+    document.head.appendChild(malsyncScript);
+}
+
+app.get("/malsync.user.js", ({query: {url}}, res) => {
+    res.contentType("application/json").send(String.raw`
+        const __userscript_location__ = window.__userscript_location__ = document.__userscript_location__ = new URL(${JSON.stringify(url)});
+        ${jquery}
         ${userscriptPolyfill}
         (async () => {
             let callback = await __polyfill_loader__;
             ${malsync}
         })();
-    `;
-    document.head.appendChild(malsyncScript);
-}
+    `);
+});
 
 app.all("*", async (req, res) => {
     try {
@@ -110,12 +105,12 @@ app.all("*", async (req, res) => {
         let dstURL = /^\/pwa\/(?!icons\/|screenshots\/|shotcuts\/)|^\/icons\/|^\/js\/|^\/css\/|^\/(?:\w+\/)?oauth\b/.test(req.path) ?
             new URL(req.originalUrl, "https://malsync.moe") :
             /^\/realms\/|^\/resources\//.test(req.path) ?
-                new URL(req.originalUrl, "https://auth.mangadex.org"):
-            req.path.startsWith("/fetch/") ?
-                new URL(req.originalUrl.substring("/fetch/".length)) :
-                new URL(req.originalUrl, "https://mangadex.org");
+                new URL(req.originalUrl, "https://auth.mangadex.org") :
+                req.path.startsWith("/fetch/") ?
+                    new URL(req.originalUrl.substring("/fetch/".length)) :
+                    new URL(req.originalUrl, "https://mangadex.org");
         let response = await fetch(dstURL, {
-            rejectUnauthorized:false,
+            rejectUnauthorized: false,
             method: req.method,
             headers: {
                 ...req.headers,
@@ -188,8 +183,9 @@ app.all("*", async (req, res) => {
                         changeSrcs(value);
                     } else if (typeof value == "string") {
                         try {
-                            object[key] = transformURL(new URL(value), srcURL, dstURL);
-                        } catch (e) {}
+                            object[key] = new URL(transformURL(new URL(value), srcURL, dstURL), srcURL);
+                        } catch (e) {
+                        }
                     }
                 }
             })(config);
