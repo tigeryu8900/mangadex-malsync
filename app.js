@@ -1,29 +1,15 @@
-import {CronJob} from "cron";
 import express from "express";
 import {JSDOM} from "jsdom";
 import {withCache} from "ultrafetch";
 
 import * as fs from "fs";
 
-import getMalsyncUserscript from "./get-malsync-userscript.js";
-
 
 fetch = withCache(fetch);
 
-let malsync;
+const malsync = fs.readFileSync("./malsync.recast.user.js");
 
 (async () => {
-    malsync = await getMalsyncUserscript();
-
-    CronJob.from({
-        cronTime: "0 0 0 * * *",
-        async onTick() {
-            malsync = await getMalsyncUserscript();
-        },
-        start: true,
-        timeZone: "America/Los_Angeles"
-    });
-
     const app = express();
     app.use(function (req, res, next) {
         let data = "";

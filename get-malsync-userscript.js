@@ -1,10 +1,11 @@
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
+import fs from "fs";
 
 
 const userscript_location = "__userscript_location__";
 
-export default async function getMalsyncUserscript() {
+(async () => {
     let code = await (await fetch("https://github.com/MALSync/MALSync/releases/latest/download/malsync.user.js")).text();
 
     code = code.replace(/\/\/\s*==UserScript==[\s\S]+?\/\/\s*==\/UserScript==/, str => String.raw`
@@ -74,5 +75,5 @@ export default async function getMalsyncUserscript() {
         }
     });
 
-    return recast.prettyPrint(ast).code;
-};
+    fs.writeFileSync("./malsync.recast.user.js", recast.prettyPrint(ast).code);
+})();
