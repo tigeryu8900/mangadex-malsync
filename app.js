@@ -180,6 +180,20 @@ app.all("*", async (req, res) => {
                 }
             })(manifest);
             res.send(JSON.stringify(manifest));
+        } else if (dstURL.href === "https://auth.mangadex.org/realms/mangadex/.well-known/openid-configuration") {
+            let config = await response.json();
+            (function changeSrcs(object) {
+                for (let [key, value] of Object.entries(object)) {
+                    if (value instanceof Object) {
+                        changeSrcs(value);
+                    } else if (typeof value == "string") {
+                        try {
+                            object[key] = transformURL(new URL(value), srcURL, dstURL);
+                        } catch (e) {}
+                    }
+                }
+            })(config);
+            res.send(JSON.stringify(config));
         } else {
             res.send(Buffer.from(await response.arrayBuffer()));
         }
