@@ -48,7 +48,7 @@ function transformURL(resource, srcURL, dstURL, anchorMode = false) {
     let url1 = new URL(resource, srcURL);
     let url2 = new URL(resource, dstURL);
     if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
-    if (["https://malsync.moe", "https://mangadex.org"].includes(url2.origin)) {
+    if (["https://malsync.moe", "https://mangadex.org", "https://auth.mangadex.org"].includes(url2.origin)) {
         // if (url2.pathname.startsWith("/pwa/") !== dstURL.pathname.startsWith("/pwa/")) {
         //     return anchorMode ? url2.href : `/fetch/${url2}`;
         // }
@@ -109,6 +109,8 @@ app.all("*", async (req, res) => {
         let srcURL = new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`);
         let dstURL = /^\/pwa\/(?!icons\/|screenshots\/|shotcuts\/)|^\/icons\/|^\/js\/|^\/css\/|^\/(?:\w+\/)?oauth\b/.test(req.path) ?
             new URL(req.originalUrl, "https://malsync.moe") :
+            /^\/realms\/|^\/resources\//.test(req.path) ?
+                new URL(req.originalUrl, "https://auth.mangadex.org"):
             req.path.startsWith("/fetch/") ?
                 new URL(req.originalUrl.substring("/fetch/".length)) :
                 new URL(req.originalUrl, "https://mangadex.org");
