@@ -12,9 +12,8 @@
     "node": ">=21.0.0"
   },
   "scripts": {
-    "start": "npm run start:get-malsync-userscript && npm run start:server",
-    "start:server": "node app.js",
-    "start:get-malsync-userscript": "node get-malsync-userscript.js"
+    "build": "node get-malsync-userscript.js",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
