@@ -14,7 +14,7 @@ const userscript_location = "__userscript_location__";
             await callback(${JSON.stringify(str)});
         `.replaceAll("$", "$$$$"));
 
-    let ast = await recast.parse(code, {parser});
+    let ast = recast.parse(code, {parser});
 
     recast.visit(ast, {
         visitMemberExpression(path) {
