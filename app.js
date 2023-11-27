@@ -1,13 +1,10 @@
 import express from "express";
 import {JSDOM} from "jsdom";
-// import {withCache} from "ultrafetch";
 
 import * as fs from "fs";
 
 
-// fetch = withCache(fetch);
-
-const malsync = fs.readFileSync("./malsync.recast.user.js");
+const malsync = fs.readFileSync("./malsync.user.js").toString();
 
 (async () => {
     const app = express();
@@ -23,9 +20,6 @@ const malsync = fs.readFileSync("./malsync.recast.user.js");
             next();
         });
     });
-
-    const userscriptPolyfill = fs.readFileSync("./userscript-polyfill.js").toString();
-    const jquery = await (await fetch("https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js")).text();
 
     function copyHeaders(from, to) {
         from.headers.forEach((value, key) => {
@@ -51,14 +45,14 @@ const malsync = fs.readFileSync("./malsync.recast.user.js");
     function transformURL(resource, srcURL, dstURL, anchorMode = false) {
         let url1 = new URL(resource, srcURL);
         let url2 = new URL(resource, dstURL);
-        if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
+        if (url1.pathname.startsWith("/fetch/")) return url1.href;
         if (["https://malsync.moe", "https://mangadex.org", "https://auth.mangadex.org"].includes(url2.origin)) {
             // if (url2.pathname.startsWith("/pwa/") !== dstURL.pathname.startsWith("/pwa/")) {
             //     return anchorMode ? url2.href : `/fetch/${url2}`;
             // }
-            return (url1.pathname || srcURL.origin) + url1.search + url1.hash;
+            return srcURL.origin + url1.pathname + url1.search + url1.hash;
         }
-        return (anchorMode || url1.origin === srcURL.origin || isLocalNetwork(url2.hostname)) ? url2.href : `/fetch/${url2}`;
+        return (anchorMode || url1.origin === srcURL.origin || isLocalNetwork(url2.hostname)) ? url2.href : `${srcURL.origin}/fetch/${url2}`;
     }
 
     function transformElement(element, srcURL, dstURL) {
@@ -90,20 +84,14 @@ const malsync = fs.readFileSync("./malsync.recast.user.js");
     }
 
     app.get("/malsync.user.js", ({query: {url}}, res) => {
-        res.contentType("application/json").send(String.raw`
-        const __userscript_location__ = window.__userscript_location__ = document.__userscript_location__ = new URL(${JSON.stringify(url)});
-        ${jquery}
-        ${userscriptPolyfill}
-        (async () => {
-            let callback = await __polyfill_loader__;
-            ${malsync}
-        })();
-    `);
+        res.contentType("application/json").send(malsync.replace("__URL_PLACEHOLDER__",
+            JSON.stringify(new URL(url).href).replaceAll("$", "$$$$")));
     });
 
     app.all("*", async (req, res) => {
         try {
-            let srcURL = new URL(`${req.protocol}://${req.get("host")}${req.originalUrl}`);
+            let srcURL = new URL((process.env.RENDER_EXTERNAL_URL ?? `${req.protocol}://${req.get("host")}`)
+                + `${req.originalUrl}`);
             let dstURL = /^\/pwa\/(?!icons\/|screenshots\/|shotcuts\/)|^\/icons\/|^\/js\/|^\/css\/|^\/(?:\w+\/)?oauth\b/.test(req.path) ?
                 new URL(req.originalUrl, "https://malsync.moe") :
                 /^\/realms\/|^\/resources\//.test(req.path) ?

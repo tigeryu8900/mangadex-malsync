@@ -1,3 +1,24 @@
+$(document).on("mouseover mouseout", function(e) {
+    let target = $(e.target ?? e.srcElement);
+    if (e.hasOwnProperty("originalEvent")) {
+        e.stopPropagation();
+        target.on(e.type);
+        setTimeout(() => target.toggleClass('hovering', e.type === 'mouseover'), 0);
+    }
+});
+$(document).on("click", function(e) {
+    let target = $(e.target ?? e.srcElement);
+    let hovering = $('.hovering');
+    if (target[0] !== hovering[0] && e.hasOwnProperty("originalEvent")) {
+        console.log("trusted", e);
+        e.stopPropagation();
+        console.log("click", hovering, e);
+        (hovering[0] ?? target[0]).dispatchEvent(new Event("click"));
+    } else {
+        console.log("click ignore", e);
+    }
+});
+
 let __polyfill_loader__ = (async () => {
     console.log("standalone");
 
@@ -12,17 +33,17 @@ let __polyfill_loader__ = (async () => {
         || hostname.endsWith('.local');
     }
 
-    function transformURL(resource, anchorMode = false) {
+    window.transformURL = function transformURL(resource, anchorMode = false) {
         let url1 = new URL(resource, location);
         let url2 = new URL(resource, __userscript_location__);
-        if (url1.pathname.startsWith("/fetch/")) return url1.pathname + url1.search + url1.hash;
+        if (url1.pathname.startsWith("/fetch/")) return url1.href;
         if (["https://malsync.moe", "https://mangadex.org", "https://auth.mangadex.org"].includes(url2.origin)) {
             // if (url2.pathname.startsWith("/pwa/") !== __userscript_location__.pathname.startsWith("/pwa/")) {
             //     return anchorMode ? url2.href : `/fetch/${url2}`;
             // }
-            return (url1.pathname || location.origin) + url1.search + url1.hash;
+            return location.origin + url1.pathname + url1.search + url1.hash;
         }
-        return (anchorMode || url1.origin === location.origin || isLocalNetwork(url2.hostname)) ? url2.href : `/fetch/${url2}`;
+        return (anchorMode || url1.origin === location.origin || isLocalNetwork(url2.hostname)) ? url2.href : `${location.origin}/fetch/${url2}`;
     }
 
     const oldFetch = fetch;
