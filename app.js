@@ -1,11 +1,11 @@
 import express from "express";
 import {JSDOM} from "jsdom";
-import {withCache} from "ultrafetch";
+// import {withCache} from "ultrafetch";
 
 import * as fs from "fs";
 
 
-fetch = withCache(fetch);
+// fetch = withCache(fetch);
 
 const malsync = fs.readFileSync("./malsync.recast.user.js");
 
