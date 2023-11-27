@@ -75,5 +75,5 @@ const userscript_location = "__userscript_location__";
         }
     });
 
-    fs.writeFileSync("./malsync.recast.user.js", recast.prettyPrint(ast).code);
+    fs.writeFileSync("./malsync.recast.user.js", recast.print(ast).code);
 })();
