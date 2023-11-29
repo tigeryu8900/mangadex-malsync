@@ -159,6 +159,7 @@ let __polyfill_loader__ = (async () => {
                             }
                         }
                     }
+                    $(':not(:has(*)):contains("Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.")').parent().remove();
                 } else if (mutation.type === "attributes") {
                     if (mutation.attributeName === "href" || mutation.attributeName === "src") {
                         if (!mutation.target.__userscript_transformed__) {
