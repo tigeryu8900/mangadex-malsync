@@ -1,23 +1,25 @@
-$(document).on("mouseover mouseout", function(e) {
-    let target = $(e.target ?? e.srcElement);
-    if (e.hasOwnProperty("originalEvent")) {
-        e.stopPropagation();
-        target.on(e.type);
-        setTimeout(() => target.toggleClass('hovering', e.type === 'mouseover'), 0);
-    }
-});
-$(document).on("click", function(e) {
-    let target = $(e.target ?? e.srcElement);
-    let hovering = $('.hovering');
-    if (target[0] !== hovering[0] && e.hasOwnProperty("originalEvent")) {
-        console.log("trusted", e);
-        e.stopPropagation();
-        console.log("click", hovering, e);
-        (hovering[0] ?? target[0]).dispatchEvent(new Event("click"));
-    } else {
-        console.log("click ignore", e);
-    }
-});
+if (__userscript_location__.origin === "https://malsync.moe") {
+    $(document).on("mouseover mouseout", function (e) {
+        let target = $(e.target ?? e.srcElement);
+        if (e.hasOwnProperty("originalEvent")) {
+            e.stopPropagation();
+            target.on(e.type);
+            setTimeout(() => target.toggleClass('hovering', e.type === 'mouseover'), 0);
+        }
+    });
+    $(document).on("click", function (e) {
+        let target = $(e.target ?? e.srcElement);
+        let hovering = $('.hovering');
+        if (target[0] !== hovering[0] && e.hasOwnProperty("originalEvent")) {
+            console.log("trusted", e);
+            e.stopPropagation();
+            console.log("click", hovering, e);
+            (hovering[0] ?? target[0]).dispatchEvent(new Event("click"));
+        } else {
+            console.log("click ignore", e);
+        }
+    });
+}
 
 let __polyfill_loader__ = (async () => {
     console.log("standalone");
