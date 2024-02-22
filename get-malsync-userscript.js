@@ -1,5 +1,4 @@
-import * as parser from "@babel/parser";
-import * as recast from "recast";
+import * as babel from "@babel/core";
 import fs from "node:fs/promises";
 
 const userscript_location = "__userscript_location__";
@@ -14,47 +13,37 @@ const userscript_location = "__userscript_location__";
             await callback(${JSON.stringify(str)});
         `.replaceAll("$", "$$$$"));
 
-    let ast = recast.parse(code, {parser});
-
-    recast.visit(ast, {
-        visitMemberExpression(path) {
-            if (path.value.object.type === "Identifier") {
-                if (path.value.object.name === "location") {
-                    if (path.value.property.type === "Identifier" && ["host", "hostname", "href", "origin"].includes(path.value.property.name)) {
-                        path.value.object.name = userscript_location;
-                        return false;
-                    } else if (path.value.property.type === "StringLiteral" && ["host", "hostname", "href", "origin"].includes(path.value.property.value)) {
-                        path.value.object.name = userscript_location;
-                        return false;
-                    }
-                } else if (["document", "window"].includes(path.value.object.name)) {
-                    if (path.value.property.type === "Identifier") {
-                        if (path.value.property.name === "location") {
-                            path.value.property.name = userscript_location;
+    let transformed = babel.transform(code, {
+        presets: ["@babel/preset-env"],
+        minified: true,
+        sourceType: "unambiguous",
+        plugins: [
+            {
+                visitor: {
+                    MemberExpression(path) {
+                        if (["location.host", "location.hostname", "location.href", "location.origin"].some(pattern => path.matchesPattern(pattern))) {
+                            path.get("object").replaceWith(babel.types.identifier(userscript_location));
+                            path.skip();
+                        } else if (["document.location", "window.location"].some(pattern => path.matchesPattern(pattern))) {
+                            path.replaceWith(babel.types.identifier(userscript_location));
+                            path.skip();
                         }
-                        return false;
-                    } else if (path.value.property.type === "StringLiteral") {
-                        if (path.value.property.value === "location") {
-                            path.value.property.value = userscript_location;
+                    },
+                    IfStatement(path) {
+                        if (/!\s*firstData\s*\.\s*hasOwnProperty\s*\(.*?\)/.test(path.get("test").getSource())) {
+                            path.replaceWith(babel.types.emptyStatement());
+                            path.skip();
                         }
-                        return false;
+                    },
+                    CallExpression(path) {
+                        if (path.get("callee").isIdentifier({ name: "alert" }) && path.get("arguments")[0].isStringLiteral({ value: "File imported" })) {
+                            path.replaceWithSourceString('alert("File imported"), window.location.reload()');
+                            path.skip();
+                        }
                     }
                 }
             }
-            this.traverse(path);
-        }, visitIfStatement(path) {
-            if (path.value.test.type === "UnaryExpression" && path.value.test.operator === "!" && path.value.test.argument.type === "CallExpression" && path.value.test.argument.callee.type === "MemberExpression" && path.value.test.argument.callee.object.type === "Identifier" && path.value.test.argument.callee.object.name === "firstData" && ((path.value.test.argument.callee.property.type === "StringLiteral" && path.value.test.argument.callee.property.value === "hasOwnProperty") || (path.value.test.argument.callee.property.type === "Identifier" && path.value.test.argument.callee.property.name === "hasOwnProperty"))) {
-                path.value.test = recast.types.builders.literal(false);
-            }
-            this.traverse(path);
-        }, visitCallExpression(path) {
-            if (path.value.callee.name === "alert" && path.value.arguments[0] && path.value.arguments[0].type === "StringLiteral" && path.value.arguments[0].value === "File imported") {
-                Object.keys(path.value).forEach(key => delete path.value[key]);
-                Object.assign(path.value, parser.parse('alert("File imported"), window.location.reload()').program.body[0].expression);
-                return false;
-            }
-            this.traverse(path);
-        }
+        ],
     });
 
     await fs.writeFile("./malsync.user.js", String.raw`
@@ -63,7 +52,7 @@ const userscript_location = "__userscript_location__";
         ${await polyfillPromise}
         (async () => {
             let callback = await __polyfill_loader__;
-            ${recast.print(ast).code}
+            ${transformed.code}
         })();
     `);
     process.exit();
