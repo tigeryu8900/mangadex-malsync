@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * 0'
 
 jobs:
-  issue:
+  update-malsync-userscript:
     runs-on: ubuntu-latest
     permissions:
       contents: write
