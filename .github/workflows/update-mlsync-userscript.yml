@@ -1,0 +1,20 @@
+name: Create our Weekly Meeting notes issue
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - run: npm ci
+      - run: npm run update-malsync-userscript
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: update MALSync userscript

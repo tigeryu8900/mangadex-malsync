@@ -13,6 +13,7 @@
   },
   "scripts": {
     "get-malsync-userscript": "node get-malsync-userscript.js",
+    "update-malsync-userscript": "node update-malsync-userscript.js",
     "start": "node app.js"
   },
   "keywords": [],
@@ -22,6 +23,7 @@
     "@babel/core": "^7.23.3",
     "@babel/preset-env": "^7.23.9",
     "express": "^4.18.2",
-    "jsdom": "^22.1.0"
+    "jsdom": "^22.1.0",
+    "semver": "^7.6.0"
   }
 }
