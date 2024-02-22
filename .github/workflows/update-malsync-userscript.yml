@@ -1,4 +1,4 @@
-name: Create our Weekly Meeting notes issue
+name: Update MALSync Userscript
 on:
   schedule:
     - cron: '0 0 * * 0'
