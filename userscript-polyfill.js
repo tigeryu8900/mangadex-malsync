@@ -162,7 +162,7 @@ let __polyfill_loader__ = (async () => {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
                     for (let element of mutation.addedNodes) {
-                        if (!element.__userscript_transformed__) {
+                        if (!$(element).is('[__userscript_transformed__]')) {
                             transformElement(element);
                             for (let descendent of $(element).find('[href], [src]')) {
                                 transformElement(descendent);
@@ -172,7 +172,7 @@ let __polyfill_loader__ = (async () => {
                     $(':not(:has(*)):contains("Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.")').parent().remove();
                 } else if (mutation.type === "attributes") {
                     if (mutation.attributeName === "href" || mutation.attributeName === "src") {
-                        if (!mutation.target.__userscript_transformed__) {
+                        if (!$(mutation.target).is('[__userscript_transformed__]')) {
                             transformElement(mutation.target);
                         }
                     }
