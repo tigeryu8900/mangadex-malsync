@@ -162,7 +162,7 @@ let __polyfill_loader__ = (async () => {
                     url = $('.reader--header-manga').attr("href");
                 }
                 let uuid = url?.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0];
-                let malsyncURL = uuid && ("GM_getValue" in window) ? `/pwa${new URL(
+                let malsyncURL = uuid && ("GM_getValue" in window) ? `/pwa/#${new URL(
                     GM_getValue(`Mangadex/${
                         uuid
                     }/Search`)?.url || (GM_getValue(`local://Mangadex/manga/${uuid}`) ? `/manga/l:Mangadex::${uuid}` : ""),
@@ -181,6 +181,11 @@ let __polyfill_loader__ = (async () => {
                 if (urlChanged) {
                     $('.pwa-link').prop("href", malsyncURL);
                 }
+            } else {
+                let closeFix = $('.close-fix:not([__userscript_transformed__])');
+                closeFix.attr("__userscript_transformed__", "");
+                closeFix.prop("outerHTML", closeFix.prop("outerHTML"));
+                $('.close-fix').click(() => (location.pathname = GM_getValue("lastPathname", "/")));
             }
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
@@ -567,9 +572,7 @@ let __polyfill_loader__ = (async () => {
         }
     });
 
-    if (__userscript_location__.origin === "https://www.malsync.moe") {
-        $(document).ready(() => $('.close-fix').click(() => (location.pathname = GM_getValue("lastPathname", "/"))));
-    } else if (__userscript_location__.origin === "https://mangadex.org") {
+    if (__userscript_location__.origin === "https://mangadex.org") {
         GM_setValue("lastPathname", __userscript_location__.pathname);
     }
 
