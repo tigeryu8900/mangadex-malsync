@@ -85,7 +85,7 @@ let __polyfill_loader__ = (async () => {
     let insertPWALink = __userscript_location__.origin === "https://mangadex.org";
     try {
         let leftPWALink = $(String.raw`
-            <a data-v-69037ae7="" data-v-eba09a86="" class="flex-shrink-0" title="">
+            <a data-v-69037ae7="" data-v-eba09a86="" class="flex-shrink-0 pwa-link" title="">
                 <div data-v-eba09a86="" class="px-4 pt-2 flex flex-col flex-shrink-0">
                     <div data-v-abcd45c8="" data-v-eba09a86="" class="list__item">
                         <div data-v-abcd45c8="">
@@ -115,7 +115,7 @@ let __polyfill_loader__ = (async () => {
                class="list__item mt-1 rounded custom-opacity relative md-btn flex items-center px-3 overflow-hidden accent text px-4 list__item mt-1"
                style="min-height: 3rem; min-width: 100%;">
                 <span data-v-a31e942f=""
-                      class="flex relative items-center justify-center font-medium select-none w-full"
+                      class="flex relative items-center justify-center font-medium select-none w-full pwa-link"
                       style="pointer-events: none; justify-content: stretch;">
                     <div data-v-c1dca64c="" class="flex justify-between items-center w-full">
                         <span data-v-c1dca64c="" class="mr-1 whitespace-nowrap">MALSync</span>
@@ -136,6 +136,19 @@ let __polyfill_loader__ = (async () => {
             </a>
         `);
         const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
+            let urlChanged = false;
+            if (__userscript_location__.pathname !== location.pathname) {
+                urlChanged = true;
+                __userscript_location__.pathname = location.pathname;
+            }
+            if (__userscript_location__.search !== location.search) {
+                urlChanged = true;
+                __userscript_location__.search = location.search;
+            }
+            if (__userscript_location__.hash !== location.hash) {
+                urlChanged = true;
+                __userscript_location__.hash = location.hash;
+            }
             if (insertPWALink) {
                 let url;
                 if (__userscript_location__.pathname.startsWith("/title/")) {
@@ -143,20 +156,25 @@ let __polyfill_loader__ = (async () => {
                 } else if (__userscript_location__.pathname.startsWith("/chapter/")) {
                     url = $('.reader--header-manga').attr("href");
                 }
-                let malsyncURL = "GM_getValue" in window ? `/pwa${new URL(GM_getValue(`Mangadex/${
-                    url?.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0]
-                }/Search`, {
-                    url: "/"
-                }).url, "https://myanimelist.net").pathname}` : "/pwa/";
+                let uuid = url?.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0];
+                let malsyncURL = uuid && ("GM_getValue" in window) ? `/pwa${new URL(
+                    GM_getValue(`Mangadex/${
+                        uuid
+                    }/Search`)?.url || (GM_getValue(`local://Mangadex/manga/${uuid}`) ? `/manga/l:Mangadex::${uuid}` : ""),
+                    "https://myanimelist.net"
+                ).pathname}` : "/pwa/";
                 let home = $('#section-Home:not([__userscript_transformed__])');
                 if (home.length) {
                     home.attr("__userscript_transformed__", "");
-                    leftPWALink.attr("href", malsyncURL).insertAfter(home);
+                    leftPWALink.prop("href", malsyncURL).insertAfter(home);
                 }
                 let grid = $('div:is(.drawer, .profile__container) > div > div.grid:not([__userscript_transformed__])');
                 if (grid.length) {
                     grid.attr("__userscript_transformed__", "");
-                    rightPWALink.attr("href", malsyncURL).insertAfter(grid);
+                    rightPWALink.prop("href", malsyncURL).insertAfter(grid);
+                }
+                if (urlChanged) {
+                    $('.pwa-link').prop("href", malsyncURL);
                 }
             }
             for (const mutation of mutationList) {
