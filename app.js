@@ -83,7 +83,7 @@ async function injectMalsync(document, srcURL, dstURL) {
 }
 
 app.get("/malsync.user.js", ({query: {url}}, res) => {
-    res.contentType("application/json").send(malsync.replace("__URL_PLACEHOLDER__",
+    res.contentType("text/javascript").send(malsync.replace("__URL_PLACEHOLDER__",
         JSON.stringify(new URL(url).href).replaceAll("$", "$$$$")));
 });
 
