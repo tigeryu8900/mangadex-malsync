@@ -1,6 +1,6 @@
 if (__userscript_location__.origin === "https://malsync.moe") {
     $(document).on("mouseover mouseout", function (e) {
-        let target = $(e.target ?? e.srcElement);
+        let target = $(e.target ?? e.srcElement ?? window.target);
         if (e.hasOwnProperty("originalEvent")) {
             e.stopPropagation();
             target.on(e.type);
@@ -8,7 +8,7 @@ if (__userscript_location__.origin === "https://malsync.moe") {
         }
     });
     $(document).on("click", function (e) {
-        let target = $(e.target ?? e.srcElement);
+        let target = $(e.target ?? e.srcElement ?? window.target);
         let hovering = $('.hovering');
         if (target[0] !== hovering[0] && e.hasOwnProperty("originalEvent")) {
             console.log("trusted", e);
