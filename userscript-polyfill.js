@@ -85,7 +85,7 @@ let __polyfill_loader__ = (async () => {
     try {
         let insertPWALink = __userscript_location__.origin === "https://mangadex.org";
         let leftPWALink = $(String.raw`
-            <a data-v-69037ae7="" data-v-eba09a86="" href="/pwa/" class="flex-shrink-0" title="">
+            <a data-v-69037ae7="" data-v-eba09a86="" class="flex-shrink-0" title="">
                 <div data-v-eba09a86="" class="px-4 pt-2 flex flex-col flex-shrink-0">
                     <div data-v-abcd45c8="" data-v-eba09a86="" class="list__item">
                         <div data-v-abcd45c8="">
@@ -113,8 +113,7 @@ let __polyfill_loader__ = (async () => {
             <a data-v-a31e942f=""
                data-v-c1dca64c=""
                class="list__item mt-1 rounded custom-opacity relative md-btn flex items-center px-3 overflow-hidden accent text px-4 list__item mt-1"
-               style="min-height: 3rem; min-width: 100%;"
-               href="/pwa/">
+               style="min-height: 3rem; min-width: 100%;">
                 <span data-v-a31e942f=""
                       class="flex relative items-center justify-center font-medium select-none w-full"
                       style="pointer-events: none; justify-content: stretch;">
@@ -137,20 +136,31 @@ let __polyfill_loader__ = (async () => {
             </a>
         `);
         const observer = new (MutationObserver || WebkitMutationObserver)(mutationList => {
+            if (insertPWALink) {
+                let url;
+                if (__userscript_location__.pathname.startsWith("/title/")) {
+                    url = __userscript_location__.pathname;
+                } else if (__userscript_location__.pathname.startsWith("/chapter/")) {
+                    url = $('.reader--header-manga').attr("href");
+                }
+                let malsyncURL = "GM_getValue" in window ? `/pwa${new URL(GM_getValue(`Mangadex/${
+                    url?.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0]
+                }/Search`, {
+                    url: "/"
+                }).url, "https://myanimelist.net").pathname}` : "/pwa/";
+                let home = $('#section-Home:not([__userscript_transformed__])');
+                if (home.length) {
+                    home.attr("__userscript_transformed__", "");
+                    leftPWALink.attr("href", malsyncURL).insertAfter(home);
+                }
+                let grid = $('div:is(.drawer, .profile__container) > div > div.grid:not([__userscript_transformed__])');
+                if (grid.length) {
+                    grid.attr("__userscript_transformed__", "");
+                    rightPWALink.attr("href", malsyncURL).insertAfter(grid);
+                }
+            }
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
-                    if (insertPWALink) {
-                        let home = $('#section-Home:not([__userscript_transformed__])');
-                        if (home.length) {
-                            home.attr("__userscript_transformed__", "");
-                            leftPWALink.insertAfter(home);
-                        }
-                        let grid = $('div:is(.drawer, .profile__container) > div > div.grid:not([__userscript_transformed__])');
-                        if (grid.length) {
-                            grid.attr("__userscript_transformed__", "");
-                            rightPWALink.insertAfter(grid);
-                        }
-                    }
                     for (let element of mutation.addedNodes) {
                         if (!element.__userscript_transformed__) {
                             transformElement(element);
