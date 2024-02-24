@@ -82,8 +82,8 @@ let __polyfill_loader__ = (async () => {
         }
     }
 
+    let insertPWALink = __userscript_location__.origin === "https://mangadex.org";
     try {
-        let insertPWALink = __userscript_location__.origin === "https://mangadex.org";
         let leftPWALink = $(String.raw`
             <a data-v-69037ae7="" data-v-eba09a86="" class="flex-shrink-0" title="">
                 <div data-v-eba09a86="" class="px-4 pt-2 flex flex-col flex-shrink-0">
