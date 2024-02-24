@@ -542,6 +542,12 @@ let __polyfill_loader__ = (async () => {
         }
     });
 
+    if (__userscript_location__.origin === "https://www.malsync.moe") {
+        $(document).ready(() => $('.close-fix').click(() => (location.pathname = GM_getValue("lastPathname", "/"))));
+    } else if (__userscript_location__.origin === "https://mangadex.org") {
+        GM_setValue("lastPathname", __userscript_location__.pathname);
+    }
+
     return async scriptMetaStr => {
         if (scriptMetaStr) {
             const GM_info = window.GM_info = window.GM.info = {
