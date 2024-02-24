@@ -66,16 +66,16 @@ let __polyfill_loader__ = (async () => {
 
     function transformElement(element) {
         try {
-            element.__userscript_transformed__ = true;
-            if (element.href) {
-                let anchorMode = element.tagName.toLowerCase() === "a";
-                element.href = transformURL(element.href, anchorMode);
-                if (anchorMode && new URL(element.href, location).origin === location.origin && element.target === "_blank") {
-                    element.removeAttribute("target");
+            element.attr("__userscript_transformed__", "");
+            if (element.prop("href")) {
+                let anchorMode = element.is('a');
+                element.prop("href", transformURL(element.prop("href"), anchorMode));
+                if (anchorMode && new URL(element.prop("href"), location).origin === location.origin && element.attr("target") === "_blank") {
+                    element.removeAttr("target");
                 }
             }
-            if (element.src) {
-                element.src = transformURL(element.src);
+            if (element.prop("src")) {
+                element.prop("src", transformURL(element.prop("src")));
             }
         } catch (e) {
             console.error(e);
@@ -162,18 +162,20 @@ let __polyfill_loader__ = (async () => {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
                     for (let element of mutation.addedNodes) {
-                        if (!$(element).is('[__userscript_transformed__]')) {
+                        element = $(element);
+                        if (!element.is('[__userscript_transformed__]')) {
                             transformElement(element);
-                            for (let descendent of $(element).find('[href], [src]')) {
-                                transformElement(descendent);
+                            for (let descendent of element.find('[href], [src]')) {
+                                transformElement($(descendent));
                             }
                         }
                     }
                     $(':not(:has(*)):contains("Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.")').parent().remove();
                 } else if (mutation.type === "attributes") {
                     if (mutation.attributeName === "href" || mutation.attributeName === "src") {
-                        if (!$(mutation.target).is('[__userscript_transformed__]')) {
-                            transformElement(mutation.target);
+                        let element = $(mutation.target);
+                        if (!element.is('[__userscript_transformed__]')) {
+                            transformElement(element);
                         }
                     }
                 }
