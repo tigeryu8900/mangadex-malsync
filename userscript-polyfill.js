@@ -1,24 +1,11 @@
 if (__userscript_location__.origin === "https://malsync.moe") {
-    $(document).on("mouseover mouseout", function (e) {
-        let target = $(e.target ?? e.srcElement ?? window.target);
-        if (e.hasOwnProperty("originalEvent")) {
+    document.addEventListener("click", e => {
+        const focus = $(e.target).find('focus');
+        if (focus.length) {
             e.stopImmediatePropagation();
-            target.on(e.type);
-            setTimeout(() => target.toggleClass('hovering', e.type === 'mouseover'), 0);
+            focus.trigger("click");
         }
-    });
-    $(document).on("click", function (e) {
-        let target = $(e.target ?? e.srcElement ?? window.target);
-        let hovering = $('.hovering');
-        if (target[0] !== hovering[0] && e.hasOwnProperty("originalEvent")) {
-            console.log("trusted", e);
-            e.stopImmediatePropagation();
-            console.log("click", hovering, e);
-            (hovering[0] ?? target[0]).dispatchEvent(new Event("click"));
-        } else {
-            console.log("click ignore", e);
-        }
-    });
+    }, true);
 }
 
 let __polyfill_loader__ = (async () => {
