@@ -7,6 +7,8 @@ if (__userscript_location__.origin === "https://malsync.moe") {
             setTimeout(() => focus.removeClass("focus"), 0);
         }
     }, true);
+
+    $(document.head).append('<meta name="referrer" content="no-referrer" />');
 }
 
 let __polyfill_loader__ = (async () => {
