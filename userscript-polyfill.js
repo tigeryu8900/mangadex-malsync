@@ -1,9 +1,10 @@
 if (__userscript_location__.origin === "https://malsync.moe") {
     document.addEventListener("click", e => {
-        const focus = $(e.target).find('focus');
+        const focus = $(e.target).find('.focus');
         if (focus.length) {
             e.stopImmediatePropagation();
             focus.trigger("click");
+            setTimeout(() => focus.removeClass("focus"), 0);
         }
     }, true);
 }
