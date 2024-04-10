@@ -180,18 +180,22 @@ app.all("*", async (req, res) => {
             })(config);
             res.send(JSON.stringify(config));
         } else {
-            await response.body.pipeTo(new WritableStream({
-                write(chunk) {
-                    res.write(chunk);
-                },
-                close() {
-                    res.end();
-                },
-                abort(err) {
-                    console.error("Sink error:", err);
-                    res.status(500).end();
-                },
-            }));
+            if (response.body) {
+                await response.body.pipeTo(new WritableStream({
+                    write(chunk) {
+                        res.write(chunk);
+                    },
+                    close() {
+                        res.end();
+                    },
+                    abort(err) {
+                        console.error("Sink error:", err);
+                        res.status(500).end();
+                    },
+                }));
+            } else {
+                res.end();
+            }
         }
     } catch (e) {
         console.error(req.path, e);
