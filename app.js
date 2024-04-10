@@ -180,7 +180,18 @@ app.all("*", async (req, res) => {
             })(config);
             res.send(JSON.stringify(config));
         } else {
-            res.send(Buffer.from(await response.arrayBuffer()));
+            await response.body.pipeTo(new WritableStream({
+                write(chunk) {
+                    res.write(chunk);
+                },
+                close() {
+                    res.end();
+                },
+                abort(err) {
+                    console.error("Sink error:", err);
+                    res.status(500).end();
+                },
+            }));
         }
     } catch (e) {
         console.error(req.path, e);
